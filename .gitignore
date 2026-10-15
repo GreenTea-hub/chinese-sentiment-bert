@@ -41,3 +41,7 @@ tmp/
 # 课程资料（本地参考，不入库）
 《人工智能导论》课程项目指南.pdf
 
+# 本机网络修复辅助文件（不入库）
+fix_github_hosts.ps1
+hosts_backup.txt
+
