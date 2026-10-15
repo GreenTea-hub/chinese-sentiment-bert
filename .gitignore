@@ -38,6 +38,11 @@ logs/
 tmp/
 .cache/
 
+# 训练产物（模型权重、日志、可视化输出等，不入库）
+outputs/
+checkpoints/
+runs/
+
 # 课程资料与本地参考（不入库）
 参考资料/
 
