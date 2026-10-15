@@ -13,9 +13,9 @@ from docx.shared import Cm, Pt, RGBColor
 
 
 SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs",
-                   "开题报告-自然语言处理.md")
+                   "开题报告-情感分析系统.md")
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs",
-                   "开题报告-自然语言处理.docx")
+                   "开题报告-情感分析系统.docx")
 
 
 def set_run_font(run, east="宋体", latin="Times New Roman", size=12, bold=None,
