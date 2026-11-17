@@ -33,6 +33,8 @@
 │   ├── 开题报告-情感分析系统.md
 │   └── 开题报告-情感分析系统.docx
 ├── scripts/                     # 辅助脚本
+│   ├── download_data.py         # 数据集自动下载（ModelScope，SHA256 校验）
+│   ├── prepare_data.py          # 一键：下载 + 清洗 + 划分（团队数据保持一致）
 │   ├── make_docx.py             # 报告生成脚本
 │   └── 1.py                     # 测试脚本
 ├── src/                         # 项目核心代码（数据处理、模型、训练/评测/推理）
@@ -63,7 +65,8 @@
 ### 数据整理
 
 - 原始数据保存在 `data/raw/`（本地，不入库），统一整理结果在 `data/processed/`（JSONL 格式，不入库）；
-- 运行 `python scripts/prepare_data.py` 可一键完成清洗、标签映射与 train/val/test 划分；
+- **团队成员获取数据（推荐）**：clone 仓库后运行 `python scripts/prepare_data.py`，脚本会自动从 ModelScope 下载全部数据集（SHA256 校验，与仓库作者数据完全一致）并完成清洗、标签映射与 train/val/test 划分，无需手动查找下载；
+- 单独下载原始数据：`python scripts/download_data.py`；
 - 处理模块：`src/data/preprocess.py`（清洗/加载/解析）、`src/data/dataset.py`（划分/统计/读写）。
 
 ## 运行环境（计划）
