@@ -18,8 +18,8 @@
 | 周次 | 阶段 | 状态 |
 | --- | --- | --- |
 | 第 1–3 周 | 项目分组 | ✅ 已完成 |
-| 第 4–6 周 | 前期准备（文献阅读、数据收集） | ⏳ 进行中 |
-| 第 7 周 | 开题报告 | 📄 见 `docs/` |
+| 第 4–6 周 | 前期准备（文献阅读、数据收集） | ✅ 已完成 |
+| 第 7 周 | 开题报告 | ✅ 见 `docs/` |
 | 第 8–11 周 | 技术方案设计与基线实现 | ⬜ 待开始 |
 | 第 12 周 | 进度检查（技术方案与实验方案） | ⬜ 待开始 |
 | 第 13–15 周 | 实验分析与系统封装 | ⬜ 待开始 |
@@ -45,10 +45,26 @@
 └── data/                        # 原始数据集（本地，不入库）
 ```
 
-## 数据集（计划）
+## 数据集
 
-- 情感极性分类：中文酒店评论（ChnSentiCorp）、微博情感（weibo_senti_100k）、电商/电影评论等
-- 方面级情感分析：SemEval-2014 Task 4、SemEval-2016 Task 5、COTE-DP 等
+### 情感极性分类（已收集）
+
+| 数据集 | 规模 | 来源与说明 |
+| --- | --- | --- |
+| 中文酒店评论（ChnSentiCorp_htl_all） | 7,766 条 | ModelScope `AiNiklaus/ChnSentiCorp`（Apache-2.0），label 0=负面 / 1=正面 |
+| 微博情感（weibo_senti_100k） | train 100k + test 20k | ModelScope `swift/weibo_senti_100k`（Apache-2.0），官方 train/test 划分 |
+
+### 方面级情感分析（已收集）
+
+| 数据集 | 规模 | 来源与说明 |
+| --- | --- | --- |
+| SemEval-2014 Task 4 | Restaurant 3041+800 / Laptop 3045+800 | ModelScope `anzhou0798/semeval2014`，标准 ABSA XML |
+
+### 数据整理
+
+- 原始数据保存在 `data/raw/`（本地，不入库），统一整理结果在 `data/processed/`（JSONL 格式，不入库）；
+- 运行 `python scripts/prepare_data.py` 可一键完成清洗、标签映射与 train/val/test 划分；
+- 处理模块：`src/data/preprocess.py`（清洗/加载/解析）、`src/data/dataset.py`（划分/统计/读写）。
 
 ## 运行环境（计划）
 
