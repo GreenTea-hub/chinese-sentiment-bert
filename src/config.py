@@ -1,9 +1,15 @@
 # -*- coding: utf-8 -*-
 """全局配置：数据路径、模型超参数等。按实际项目情况调整。"""
 
+import os
+
+# 基于文件位置计算绝对路径，保证从任意目录运行都正确
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))          # .../src
+PROJECT_DIR = os.path.dirname(BASE_DIR)                        # 项目根目录
+
 # 数据与输出路径
-DATA_DIR = "../data"          # 原始数据目录（不入库）
-OUTPUT_DIR = "../outputs"     # 输出目录：模型权重、日志等（不入库）
+DATA_DIR = os.path.join(PROJECT_DIR, "data")      # 原始数据目录（不入库）
+OUTPUT_DIR = os.path.join(PROJECT_DIR, "outputs")  # 输出目录：模型权重、日志等（不入库）
 
 # 训练超参数
 SEED = 42

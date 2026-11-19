@@ -1,0 +1,26 @@
+# =====================================================
+# chinese-sentiment-bert 依赖清单
+# 用法见 scripts/setup_env.ps1（Windows 一键配置）
+# =====================================================
+
+# ---- 数据处理与分析 ----
+numpy>=1.26
+pandas>=2.0
+scikit-learn>=1.4
+jieba>=0.42
+matplotlib>=3.8
+
+# ---- 网络与爬虫（豆瓣评论数据） ----
+requests>=2.31
+beautifulsoup4>=4.12
+lxml>=5.0
+
+# ---- 深度学习（PyTorch + HuggingFace） ----
+# torch 按机器情况安装：有 NVIDIA GPU 用 CUDA 版（见 setup_env.ps1），
+# 否则 pip 会装 CPU 版（torch 的 pypi 默认包体积较大）。
+torch>=2.4
+transformers>=4.40
+datasets>=2.19
+
+# ---- Web 演示（Flask） ----
+flask>=3.0

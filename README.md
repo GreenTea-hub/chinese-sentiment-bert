@@ -20,7 +20,7 @@
 | 第 1–3 周 | 项目分组 | ✅ 已完成 |
 | 第 4–6 周 | 前期准备（文献阅读、数据收集） | ✅ 已完成 |
 | 第 7 周 | 开题报告 | ✅ 见 `docs/` |
-| 第 8–11 周 | 技术方案设计与基线实现 | ⬜ 待开始 |
+| 第 8–11 周 | 技术方案设计与基线实现 | ✅ 已完成（详见 `docs/项目进展报告.md`） |
 | 第 12 周 | 进度检查（技术方案与实验方案） | ⬜ 待开始 |
 | 第 13–15 周 | 实验分析与系统封装 | ⬜ 待开始 |
 | 第 16 周 | 项目汇报 | ⬜ 待开始 |
@@ -29,22 +29,49 @@
 
 ```
 ├── README.md                    # 项目说明
-├── docs/                        # 项目文档（开题报告等）
+├── docs/                        # 项目文档（开题报告、项目进展报告）
 │   ├── 开题报告-情感分析系统.md
-│   └── 开题报告-情感分析系统.docx
+│   ├── 开题报告-情感分析系统.docx
+│   └── 项目进展报告.md
 ├── scripts/                     # 辅助脚本
+│   ├── setup_env.ps1            # 一键环境配置（venv + GPU 检测 + 依赖安装）
 │   ├── download_data.py         # 数据集自动下载（ModelScope，SHA256 校验）
 │   ├── prepare_data.py          # 一键：下载 + 清洗 + 划分（团队数据保持一致）
+│   ├── run_baselines.py         # 词典法 + SVM 基线实验
+│   ├── crawl_douban.py          # 豆瓣短评爬虫
+│   ├── convert_douban.py        # 豆瓣数据转换（星级 -> 情感标签）
 │   ├── make_docx.py             # 报告生成脚本
 │   └── 1.py                     # 测试脚本
-├── src/                         # 项目核心代码（数据处理、模型、训练/评测/推理）
+├── src/                         # 项目核心代码
 │   ├── config.py
-│   ├── data/  models/  utils/
-│   ├── train.py  evaluate.py  predict.py
-│   └── README.md                # 代码结构说明
+│   ├── data/                    # 数据处理（preprocess / dataset）
+│   ├── models/                  # 模型（textcnn / bilstm / bert / absa_joint / lexicon）
+│   ├── utils/                   # 评测指标
+│   ├── train.py  train_absa.py  # 训练入口
+│   ├── evaluate.py              # 评测入口
+│   ├── predict.py  predict_absa.py  # 推理入口
+│   └── app.py                   # Flask 演示界面
+├── requirements.txt             # 依赖清单
 ├── 参考资料/                    # 课程资料与参考文献（本地，不入库）
 ├── 工具/                        # 本机辅助工具（本地，不入库）
 └── data/                        # 原始数据集（本地，不入库）
+```
+
+## 快速开始
+
+```powershell
+# 1. 配置环境（自动创建 .venv、按 GPU 装 CUDA 版 PyTorch、安装依赖）
+powershell -ExecutionPolicy Bypass -File scripts/setup_env.ps1
+
+# 2. 下载并整理数据集（SHA256 校验，团队数据一致）
+.venv\Scripts\python.exe scripts\prepare_data.py
+
+# 3. 训练与评测
+.venv\Scripts\python.exe src\train.py --model bert --dataset chnsenticorp
+.venv\Scripts\python.exe src\evaluate.py --model bert --dataset chnsenticorp
+
+# 4. 启动 Flask 演示界面（http://127.0.0.1:5000）
+.venv\Scripts\python.exe src\app.py
 ```
 
 ## 数据集
