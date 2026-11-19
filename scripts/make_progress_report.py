@@ -1,0 +1,346 @@
+# -*- coding: utf-8 -*-
+"""按课程进展报告模板生成《人工智能导论》项目进展报告（docx）。
+
+模板结构：
+    封面（题目/学院/组长/成员/开题时间）
+    一、项目任务  二、技术方案  三、实验方案
+    四、目前进展  五、待解决的问题  六、参考文献
+
+用法：
+    .venv\\Scripts\\python.exe scripts/make_progress_report.py
+"""
+
+import os
+
+from docx import Document
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Cm, Pt, RGBColor
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+OUT = os.path.join(ROOT, "docs", "项目进展报告.docx")
+
+
+def set_cn_font(run, east="宋体", latin="Times New Roman", size=12,
+                bold=None, color=None):
+    run.font.name = latin
+    rpr = run._element.get_or_add_rPr()
+    rfonts = rpr.find(qn("w:rFonts"))
+    if rfonts is None:
+        rfonts = OxmlElement("w:rFonts")
+        rpr.append(rfonts)
+    rfonts.set(qn("w:eastAsia"), east)
+    rfonts.set(qn("w:ascii"), latin)
+    rfonts.set(qn("w:hAnsi"), latin)
+    run.font.size = Pt(size)
+    if bold is not None:
+        run.font.bold = bold
+    if color is not None:
+        run.font.color.rgb = color
+
+
+def add_para(doc, text, size=12, bold=False, align=None, east="宋体",
+             first_indent=None, line_spacing=1.5, space_after=0):
+    p = doc.add_paragraph()
+    if align is not None:
+        p.alignment = align
+    pf = p.paragraph_format
+    if first_indent is not None:
+        pf.first_line_indent = Cm(first_indent)
+    pf.line_spacing = line_spacing
+    pf.space_after = Pt(space_after)
+    run = p.add_run(text)
+    set_cn_font(run, east=east, size=size, bold=bold)
+    return p
+
+
+def add_heading(doc, text, size=14):
+    p = doc.add_paragraph()
+    p.paragraph_format.space_before = Pt(10)
+    p.paragraph_format.space_after = Pt(4)
+    run = p.add_run(text)
+    set_cn_font(run, east="黑体", size=size, bold=True,
+                color=RGBColor(0, 0, 0))
+    return p
+
+
+def add_bullets(doc, lines):
+    for ln in lines:
+        p = doc.add_paragraph()
+        p.paragraph_format.left_indent = Cm(0.74)
+        p.paragraph_format.line_spacing = 1.5
+        p.paragraph_format.space_after = Pt(0)
+        run = p.add_run("• " + ln)
+        set_cn_font(run, size=12)
+
+
+def add_table(doc, rows, header=True):
+    n_cols = max(len(r) for r in rows)
+    table = doc.add_table(rows=len(rows), cols=n_cols)
+    table.style = "Table Grid"
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    for i, row in enumerate(rows):
+        for j in range(n_cols):
+            cell = table.cell(i, j)
+            cell.text = ""
+            p = cell.paragraphs[0]
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            text = row[j] if j < len(row) else ""
+            run = p.add_run(str(text))
+            is_header = header and i == 0
+            set_cn_font(run, size=10.5, bold=is_header)
+    doc.add_paragraph()
+    return table
+
+
+def main():
+    doc = Document()
+    for section in doc.sections:
+        section.top_margin = Cm(2.54)
+        section.bottom_margin = Cm(2.54)
+        section.left_margin = Cm(3.0)
+        section.right_margin = Cm(3.0)
+    style = doc.styles["Normal"]
+    style.font.name = "Times New Roman"
+    style.font.size = Pt(12)
+    style._element.rPr.rFonts.set(qn("w:eastAsia"), "宋体")
+
+    # ---------------- 封面 ----------------
+    add_para(doc, "《人工智能导论》课程项目", size=22, bold=True,
+             align=WD_ALIGN_PARAGRAPH.CENTER, east="黑体", line_spacing=2.0)
+    add_para(doc, "进 展 报 告", size=26, bold=True,
+             align=WD_ALIGN_PARAGRAPH.CENTER, east="黑体", line_spacing=2.0)
+    add_para(doc, "", size=12, line_spacing=2.0)
+
+    cover_rows = [
+        ["项  目  题  目：", "基于预训练语言模型的中文文本情感分析系统"],
+        ["所  在  学  院：", "计算机学院"],
+        ["项  目  组  长：", "曾理"],
+        ["小  组  成  员：", "曾理、谢嘉辉、王文挺、邱润峰"],
+        ["开  题  时  间：", "2026年10月"],
+    ]
+    table = doc.add_table(rows=len(cover_rows), cols=2)
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    for i, (k, v) in enumerate(cover_rows):
+        c0, c1 = table.cell(i, 0), table.cell(i, 1)
+        c0.text = ""
+        c1.text = ""
+        p0 = c0.paragraphs[0]
+        p0.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        r0 = p0.add_run(k)
+        set_cn_font(r0, size=14, bold=True)
+        p1 = c1.paragraphs[0]
+        r1 = p1.add_run(v)
+        set_cn_font(r1, size=14, bold=False)
+        c1.width = Cm(10)
+    doc.add_paragraph()
+    doc.add_paragraph()
+
+    # ---------------- 一、项目任务 ----------------
+    add_heading(doc, "一、项目任务")
+    add_para(doc,
+             "本项目为《人工智能导论》课程项目指南题目7（自然语言处理·情感分析方向），"
+             "围绕中文文本情感分析构建完整系统，任务包括：", first_indent=0.74)
+    add_bullets(doc, [
+        "情感极性分类（核心任务）：对输入的中文评论文本自动判断情感极性"
+        "（积极 / 消极），并输出置信度；",
+        "方面级情感分析（扩展任务）：抽取评论文本中的方面词，并判断每个方面"
+        "对应的情感极性，输出（方面词，情感极性）结构化结果；",
+        "系统集成：将上述能力封装为命令行工具与 Web 可视化演示界面，实现端到端使用。",
+    ])
+    add_para(doc, "系统输入与输出如下表：", first_indent=0.74)
+    add_table(doc, [
+        ["功能", "输入", "输出"],
+        ["情感极性分类", "一段中文评论文本", "情感极性标签及概率分布"],
+        ["方面级情感分析", "一句或一段评论文本", "（方面词，情感极性）列表"],
+        ["系统整体", "文本文件或交互输入", "结构化结果（JSON）+ 可视化展示"],
+    ])
+    add_para(doc,
+             "评价指标：情感极性分类采用准确率（Accuracy）、宏平均精确率/召回率/F1"
+             "（Macro-P/R/F1）与混淆矩阵；方面级情感分析采用方面抽取 F1（ATE-F1）、"
+             "方面情感分类准确率与综合 Aspect-level F1；同时记录模型大小与单条推理耗时。",
+             first_indent=0.74)
+
+    # ---------------- 二、技术方案 ----------------
+    add_heading(doc, "二、技术方案")
+    add_para(doc, "（1）总体架构。系统分为五层：", first_indent=0.74)
+    add_bullets(doc, [
+        "数据处理层：文本清洗、jieba 分词 / BERT 子词分词、情感标签映射、"
+        "训练/验证/测试划分（统一 JSONL 格式）；",
+        "表示层：以预训练语言模型（bert-base-chinese）编码文本，获得上下文相关表示；",
+        "情感分类头：取 [CLS] 表示，接全连接层与 Softmax 输出情感极性概率；",
+        "方面级情感分析模块（扩展）：BERT 共享编码 + BIO 序列标注头（方面抽取）"
+        "+ 方面情感分类头（4 极性：正面/负面/中性/冲突），两路损失联合训练；",
+        "推理与封装层：基于 HuggingFace Transformers 封装推理接口，Flask 构建 Web 演示界面。",
+    ])
+    add_para(doc, "（2）基线方法。", first_indent=0.74)
+    add_bullets(doc, [
+        "情感词典规则法：内置中文情感词典（积极/消极词表）+ 否定词与程度副词规则，"
+        "统计情感分值判断极性；",
+        "TF-IDF + SVM：以 TF-IDF（jieba 分词、1-2gram）为特征，LinearSVC 为分类器；",
+        "TextCNN：基于卷积神经网络的情感分类基线（Kim, 2014），卷积核尺寸 2/3/4、"
+        "各 128 个滤波器，embedding 维度 128；",
+        "BiLSTM：2 层双向 LSTM（隐层 256），取末层双向状态拼接接全连接层。",
+    ])
+    add_para(doc, "（3）主模型。", first_indent=0.74)
+    add_para(doc,
+             "以 BERT 系列预训练模型微调为主模型：采用 bert-base-chinese，"
+             "学习率 2e-5、batch size 16、最大序列长度 128、3 个训练轮次，"
+             "取 [CLS] 表示经 dropout 与全连接层输出情感极性。",
+             first_indent=0.74)
+    add_para(doc, "（4）方面级情感分析（扩展）。", first_indent=0.74)
+    add_para(doc,
+             "在 SemEval-2014 Task 4（Restaurant / Laptop）上实现 BERT-based 联合训练模型："
+             "共享 BERT 编码器输出 token 级表示；序列标注头逐 token 预测 BIO 标签实现方面抽取；"
+             "方面情感头对抽取到的方面 span 取平均表示，预测 4 类极性；"
+             "抽取损失（BIO 类别加权）与情感分类损失相加联合优化。",
+             first_indent=0.74)
+    add_para(doc, "（5）系统封装。", first_indent=0.74)
+    add_para(doc,
+             "基于 Flask 构建单页演示界面：POST /analyze 接口接收文本，返回整体情感"
+             "（标签 + 置信度）与方面级（方面词 + 极性）JSON 结果；前端使用原生 JavaScript。",
+             first_indent=0.74)
+
+    # ---------------- 三、实验方案 ----------------
+    add_heading(doc, "三、实验方案")
+    add_para(doc, "（1）实验数据集。", first_indent=0.74)
+    add_table(doc, [
+        ["数据集", "规模", "用途"],
+        ["ChnSentiCorp_htl_all（中文酒店评论）", "7,766 条（8:1:1 划分）", "情感极性分类"],
+        ["weibo_senti_100k（微博情感）", "100k 训练 + 20k 官方测试", "情感极性分类"],
+        ["SemEval-2014 Task 4（Restaurant/Laptop）", "3041+800 / 3045+800", "方面级情感分析"],
+        ["豆瓣电影短评（自行爬取）", "119 条（星级弱标签）", "补充数据 / 数据获取实践"],
+    ])
+    add_para(doc,
+             "数据集均来自公开渠道（ModelScope 平台，Apache-2.0 协议），"
+             "通过自动下载脚本（SHA256 校验）保证四人数据完全一致；"
+             "原始数据与模型权重不入库。",
+             first_indent=0.74)
+    add_para(doc, "（2）实验环境。", first_indent=0.74)
+    add_para(doc,
+             "Python 3.12、PyTorch 2.6.0（CUDA 12.4，NVIDIA RTX 4070 Laptop GPU）、"
+             "HuggingFace Transformers、scikit-learn、jieba、Flask、matplotlib；"
+             "提供一键环境配置脚本，自动检测 GPU 并安装对应版本 PyTorch。",
+             first_indent=0.74)
+    add_para(doc, "（3）实验流程。", first_indent=0.74)
+    add_bullets(doc, [
+        "数据准备与预处理，统计类别分布与样本长度分布；",
+        "实现并跑通基线：情感词典规则法、TF-IDF+SVM、TextCNN、BiLSTM；",
+        "实现主模型（BERT 微调），记录训练/验证曲线；",
+        "实现方面级联合训练模型（抽取 + 情感分类），在 SemEval-2014 上评测；",
+        "结果可视化与误差分析（混淆矩阵、训练曲线、典型错误样本）。",
+    ])
+    add_para(doc,
+             "（4）评价指标。分类任务使用 Accuracy 与 Macro-F1 及混淆矩阵；"
+             "ABSA 使用 ATE-F1（方面抽取）与 Aspect-level F1（抽取正确且极性正确）。",
+             first_indent=0.74)
+
+    # ---------------- 四、目前进展 ----------------
+    add_heading(doc, "四、目前进展")
+    add_para(doc,
+             "截至报告日期，项目已完成数据准备、环境配置、代码实现与初步实验，具体进展如下：",
+             first_indent=0.74)
+    add_para(doc, "（1）数据准备工作已完成。", first_indent=0.74)
+    add_para(doc,
+             "完成 ChnSentiCorp、weibo_senti_100k、SemEval-2014 Task 4 三个数据集的"
+             "自动下载、清洗、标签映射与训练/验证/测试划分（统一 JSONL 格式）；"
+             "另行完成豆瓣电影短评爬虫（星级弱标签）作为补充数据。",
+             first_indent=0.74)
+    add_para(doc, "（2）代码实现已完成。", first_indent=0.74)
+    add_bullets(doc, [
+        "数据模块：清洗、加载、解析、划分、统计（src/data/）；",
+        "模型：情感词典规则法、TextCNN、BiLSTM、BERT 微调分类、ABSA 联合模型；",
+        "训练/评测/推理入口与评测指标（Accuracy/Macro-F1/混淆矩阵/ATE-F1）；",
+        "Flask Web 演示界面，端到端可运行（分类 + 方面级）。",
+    ])
+    add_para(doc, "（3）初步实验结果。", first_indent=0.74)
+    add_para(doc, "情感极性分类测试集结果（ChnSentiCorp，777 条测试样本）：",
+             first_indent=0.74)
+    add_table(doc, [
+        ["方法", "Accuracy", "Macro-F1", "说明"],
+        ["情感词典规则法", "0.611", "0.587", "判定覆盖率 6.95%"],
+        ["TF-IDF + SVM", "0.870", "0.856", ""],
+        ["TextCNN", "0.785", "0.712", ""],
+        ["BiLSTM", "0.794", "0.741", ""],
+        ["BERT 微调（主模型）", "0.888", "0.873", "最优"],
+    ])
+    add_para(doc, "weibo_senti_100k 测试集结果（19,988 条官方测试样本）：",
+             first_indent=0.74)
+    add_table(doc, [
+        ["方法", "Accuracy", "Macro-F1"],
+        ["情感词典规则法", "0.593", "0.536（覆盖率 7.42%）"],
+        ["TF-IDF + SVM", "0.966", "0.966"],
+        ["TextCNN", "0.981", "0.981"],
+        ["BiLSTM", "0.978", "0.978"],
+        ["BERT 微调", "0.976", "0.976"],
+    ])
+    add_para(doc, "方面级情感分析（SemEval-2014，联合训练模型）：", first_indent=0.74)
+    add_table(doc, [
+        ["领域", "ATE-F1（方面抽取）", "Aspect-level F1"],
+        ["Restaurant", "0.624", "0.624"],
+        ["Laptop", "0.433", "0.433"],
+    ])
+    add_para(doc, "（4）结果分析。", first_indent=0.74)
+    add_bullets(doc, [
+        "ChnSentiCorp 上 BERT 微调明显领先（Accuracy 0.888、Macro-F1 0.873），"
+        "体现预训练模型在中文短评情感分类上的优势；",
+        "weibo 数据上 TextCNN 以 0.981 略优于 BERT（0.976），"
+        "说明情感表达直白的简单任务上轻量模型同样有效，与文献观察一致；",
+        "ABSA 联合训练模型可正确处理同一句中多方面情感极性相反的情况"
+        "（如 The food is great but the service was horrible）。",
+    ])
+
+    # ---------------- 五、待解决的问题 ----------------
+    add_heading(doc, "五、待解决的问题")
+    add_bullets(doc, [
+        "复杂表达识别：反讽、网络新词、隐式情感等复杂表达的识别仍是难点，"
+        "拟通过数据增强与更大规模预训练模型（chinese-roberta-wwm-ext）进一步验证；",
+        "方面级评测数据：SemEval-2014 官方测试集在本项目数据源中缺少情感极性标注，"
+        "当前采用训练集内划分评测，后续计划接入完整标注版本；",
+        "类别体系：现有分类数据集为二分类（积极/消极），中性类样本缺乏，"
+        "三分类扩展需补充数据；",
+        "词典法覆盖度：规则法判定覆盖率仅约 7%，需扩充情感词典或结合机器学习；",
+        "后续实验：预训练模型对比（bert-base-chinese vs chinese-roberta-wwm-ext）、"
+        "消融实验（有无方面信息、联合 vs 流水线）、模型效率对比（推理耗时/模型大小）；",
+        "系统完善：Web 界面增加低置信度提示与批量分析功能。",
+    ])
+
+    # ---------------- 六、参考文献 ----------------
+    add_heading(doc, "六、参考文献")
+    refs = [
+        "[1] Pang B, Lee L, Vaithyanathan S. Thumbs up? Sentiment Classification using Machine Learning Techniques[C]. EMNLP, 2002.",
+        "[2] Turney P D. Thumbs Up or Thumbs Down? Semantic Orientation Applied to Unsupervised Classification of Reviews[C]. ACL, 2002.",
+        "[3] Pang B, Lee L. Opinion Mining and Sentiment Analysis[J]. Foundations and Trends in Information Retrieval, 2008, 2(1-2): 1-135.",
+        "[4] 杨立公, 朱俭, 汤世平. 文本情感分析综述[J]. 计算机应用, 2013, 33(6): 1574-1578.",
+        "[5] Mikolov T, Chen K, Corrado G, et al. Efficient Estimation of Word Representations in Vector Space[C]. ICLR Workshop, 2013.",
+        "[6] Kim Y. Convolutional Neural Networks for Sentence Classification[C]. EMNLP, 2014.",
+        "[7] Pontiki M, Galanis D, Pavlopoulos J, et al. SemEval-2014 Task 4: Aspect Based Sentiment Analysis[C]. SemEval, 2014.",
+        "[8] Tang D, Qin B, Feng X, et al. Effective LSTMs for Target-Dependent Sentiment Classification[C]. COLING, 2016.",
+        "[9] Wang Y, Huang M, Zhao L. Attention-based LSTM for Aspect-level Sentiment Classification[C]. EMNLP, 2016.",
+        "[10] Ma D, Li S, Zhang X, et al. Interactive Attention Networks for Aspect-Level Sentiment Classification[C]. IJCAI, 2017.",
+        "[11] Devlin J, Chang M W, Lee K, et al. BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding[C]. NAACL, 2019.",
+        "[12] Liu Y, Ott M, Goyal N, et al. RoBERTa: A Robustly Optimized BERT Pretraining Approach[J]. arXiv:1907.11692, 2019.",
+        "[13] Cui Y, Che W, Liu T, et al. Pre-Training with Whole Word Masking for Chinese BERT[J]. arXiv:1906.08101, 2019.",
+        "[14] Zhang Z, Han X, Liu Z, et al. ERNIE: Enhanced Language Representation with Informative Entities[C]. ACL, 2019.",
+        "[15] Sun C, Qiu X, Xu Y, et al. How to Fine-Tune BERT for Text Classification?[C]. CCL, 2019.",
+        "[16] Xu H, Liu B, Shu L, et al. BERT Post-Training for Review Reading Comprehension and Aspect-based Sentiment Analysis[C]. NAACL, 2019.",
+    ]
+    for r in refs:
+        p = doc.add_paragraph()
+        p.paragraph_format.left_indent = Cm(0.74)
+        p.paragraph_format.first_line_indent = Cm(-0.74)
+        p.paragraph_format.line_spacing = 1.5
+        p.paragraph_format.space_after = Pt(2)
+        run = p.add_run(r)
+        set_cn_font(run, size=10.5)
+
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    doc.save(OUT)
+    print("saved:", OUT)
+
+
+if __name__ == "__main__":
+    main()
